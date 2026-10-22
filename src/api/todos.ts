@@ -7,6 +7,9 @@ export const getTask = (id: string): Promise<AxiosResponse<TodoTask>> => api.get
 export const createTask = (data: Partial<TodoTask>): Promise<AxiosResponse<TodoTask>> => api.post('/TodoTasks', data)
 export const updateTask = (id: string, data: Partial<TodoTask>): Promise<AxiosResponse<TodoTask>> => api.put(`/TodoTasks/${id}`, data)
 export const deleteTask = (id: string): Promise<AxiosResponse<void>> => api.delete(`/TodoTasks/${id}`)
+// UUS LAHENDUS (A4): üks päring kogu järjestuse kohta. Vana lahendus kasutas updateTask-i iga taski kohta.
+export const saveTaskOrder = (items: { id: string; taskSort: number }[]): Promise<AxiosResponse<{ updated: number }>> =>
+  api.put('/TodoTasks/reorder', items)
 
 export const getCategories = (): Promise<AxiosResponse<TodoCategory[]>> => api.get('/TodoCategories')
 export const createCategory = (data: Omit<TodoCategory, 'id'>): Promise<AxiosResponse<TodoCategory>> => api.post('/TodoCategories', data)

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react'
 import {
-  getTasks, createTask, updateTask, deleteTask,
+  getTasks, createTask, updateTask, deleteTask, saveTaskOrder as apiSaveTaskOrder,
   getCategories, createCategory, updateCategory, deleteCategory,
   getPriorities, createPriority, updatePriority, deletePriority,
 } from '../api/todos'
@@ -44,6 +44,7 @@ interface TodoContextValue extends TodoState {
   editTask: (id: string, data: Partial<TodoTask>) => Promise<TodoTask>
   removeTask: (id: string) => Promise<void>
   reorderTasks: (tasks: TodoTask[]) => void
+  saveTaskOrder: (items: { id: string; taskSort: number }[]) => Promise<void>
   addCategory: (data: Omit<TodoCategory, 'id'>) => Promise<TodoCategory>
   editCategory: (id: string, data: TodoCategory) => Promise<TodoCategory>
   removeCategory: (id: string) => Promise<void>
@@ -138,6 +139,10 @@ export function TodoProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'REPLACE_TASKS', payload: tasks })
   }, [])
 
+  const saveTaskOrder = useCallback(async (items: { id: string; taskSort: number }[]): Promise<void> => {
+    await apiSaveTaskOrder(items)
+  }, [])
+
   const addCategory = useCallback(async (data: Omit<TodoCategory, 'id'>): Promise<TodoCategory> => {
     const res = await createCategory(data)
     dispatch({ type: 'ADD_CATEGORY', payload: res.data })
@@ -186,7 +191,7 @@ export function TodoProvider({ children }: { children: ReactNode }) {
     <TodoContext.Provider value={{
       ...state, priorityRankById,
       fetchAll, fetchTasks, fetchCategories, fetchPriorities,
-      addTask, editTask, removeTask, reorderTasks,
+      addTask, editTask, removeTask, reorderTasks, saveTaskOrder,
       addCategory, editCategory, removeCategory,
       addPriority, editPriority, removePriority,
       reset,

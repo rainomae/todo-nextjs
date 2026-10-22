@@ -44,7 +44,7 @@ function formReducer(state: TaskForm, action: FormAction): TaskForm {
 export default function TodosPage() {
   const {
     tasks, categories, priorities, loading, error,
-    fetchAll, addTask, editTask, removeTask, reorderTasks, priorityRankById,
+    fetchAll, addTask, editTask, removeTask, reorderTasks, saveTaskOrder, priorityRankById,
   } = useTodos()
 
   const [search, setSearch] = useState('')
@@ -108,11 +108,22 @@ export default function TodosPage() {
     reorderTasks(updated)
     draggedId.current = null; setDragOverId(null)
     try {
-      await Promise.all(changed.map((t) => editTask(t.id, {
-        id: t.id, taskName: t.taskName, todoCategoryId: t.todoCategoryId,
-        todoPriorityId: t.todoPriorityId, dueDt: t.dueDt,
-        isCompleted: t.isCompleted, isArchived: t.isArchived, taskSort: t.taskSort,
-      })))
+      const t0 = performance.now() // A4 mõõtmine, aeg läheb Console'i
+
+      // ===== UUS LAHENDUS: üks PUT /TodoTasks/reorder kogu järjestuse kohta =====
+      await saveTaskOrder(changed.map((t) => ({ id: t.id, taskSort: t.taskSort })))
+      console.log(`reorder (bulk): ${changed.length} tasks, ${Math.round(performance.now() - t0)} ms`)
+      // ===== UUS LAHENDUS LÕPP =====
+
+      // ===== VANA LAHENDUS: PUT iga muutunud taski kohta, kõik korraga =====
+      // Vahetamiseks kommenteeri ülemine blokk välja ja see sisse.
+      // await Promise.all(changed.map((t) => editTask(t.id, {
+      //   id: t.id, taskName: t.taskName, todoCategoryId: t.todoCategoryId,
+      //   todoPriorityId: t.todoPriorityId, dueDt: t.dueDt,
+      //   isCompleted: t.isCompleted, isArchived: t.isArchived, taskSort: t.taskSort,
+      // })))
+      // console.log(`reorder (Promise.all): ${changed.length} PUT, ${Math.round(performance.now() - t0)} ms`)
+      // ===== VANA LAHENDUS LÕPP =====
     } catch (err) {
       alert(parseError(err, 'Järjestuse salvestamine ebaõnnestus'))
       await fetchAll()
